@@ -3,6 +3,7 @@ import Landing from './pages/Landing'
 import Signup from './pages/Signup'
 import Login from './pages/Login'
 import GoalSelection from './pages/GoalSelection'
+import Dashboard from './pages/Dashboard'
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/goal-selection" element={<GoalSelection />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
   )
