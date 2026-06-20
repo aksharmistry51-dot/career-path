@@ -68,4 +68,32 @@ public class TaskController {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
+    @GetMapping("/topic-progress")
+    public ResponseEntity<?> getTopicProgress(Authentication authentication) {
+        User user = getCurrentUser(authentication);
+        List<Task> tasks = taskRepository.findByUserId(user.getId());
+
+        Map<String, long[]> topicStats = new java.util.LinkedHashMap<>();
+        for (Task t : tasks) {
+            String topic = t.getTopic() != null ? t.getTopic() : "General";
+            topicStats.putIfAbsent(topic, new long[]{0, 0});
+            topicStats.get(topic)[1]++;
+            if (Boolean.TRUE.equals(t.getCompleted())) {
+                topicStats.get(topic)[0]++;
+            }
+        }
+
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        for (Map.Entry<String, long[]> entry : topicStats.entrySet()) {
+            long completed = entry.getValue()[0];
+            long total = entry.getValue()[1];
+            int percent = total > 0 ? (int) ((completed * 100) / total) : 0;
+            Map<String, Object> item = new java.util.HashMap<>();
+            item.put("topic", entry.getKey());
+            item.put("percent", percent);
+            result.add(item);
+        }
+
+        return ResponseEntity.ok(result);
+    }
 }

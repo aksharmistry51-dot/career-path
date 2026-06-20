@@ -48,6 +48,8 @@ export const api = {
 
   getTasks: () => request('/tasks'),
 
+  getTopicProgress: () => request('/tasks/topic-progress'),
+
   createTask: (title, topic, dayNumber) =>
     request('/tasks', {
       method: 'POST',

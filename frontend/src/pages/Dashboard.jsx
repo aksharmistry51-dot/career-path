@@ -4,13 +4,6 @@ import { Flame, Star, TrendingUp, CheckSquare, Square } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import { api } from '../api'
 
-const topicProgress = [
-  { topic: 'Arrays', percent: 85 },
-  { topic: 'Strings', percent: 60 },
-  { topic: 'Linked List', percent: 40 },
-  { topic: 'Trees', percent: 20 },
-]
-
 function generateHeatmap() {
   const data = []
   for (let i = 0; i < 52 * 7; i++) {
@@ -25,6 +18,7 @@ const heatColors = ['#1E293B', '#312E81', '#4338CA', '#6366F1', '#818CF8']
 export default function Dashboard() {
   const [profile, setProfile] = useState(null)
   const [tasks, setTasks] = useState([])
+  const [topicProgress, setTopicProgress] = useState([])
   const [loading, setLoading] = useState(true)
 
   const loadData = async () => {
@@ -48,6 +42,9 @@ export default function Dashboard() {
       }
 
       setTasks(taskData)
+
+      const topicData = await api.getTopicProgress()
+      setTopicProgress(topicData)
     } catch (err) {
       console.error('Failed to load dashboard data:', err)
     } finally {
@@ -68,6 +65,9 @@ export default function Dashboard() {
         const updatedProfile = await api.addXp(10)
         setProfile(updatedProfile)
       }
+
+      const topicData = await api.getTopicProgress()
+      setTopicProgress(topicData)
     } catch (err) {
       console.error('Failed to toggle task:', err)
     }
@@ -210,24 +210,28 @@ export default function Dashboard() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
           className="mt-6 bg-[#1E293B] rounded-2xl p-6 border border-white/5">
           <p className="text-[#94A3B8] text-sm mb-4">Topic Progress</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {topicProgress.map((t, i) => (
-              <div key={i}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>{t.topic}</span>
-                  <span className="text-[#94A3B8]">{t.percent}%</span>
+          {topicProgress.length === 0 ? (
+            <p className="text-[#475569] text-sm">Complete tasks to see topic progress.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {topicProgress.map((t, i) => (
+                <div key={i}>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>{t.topic}</span>
+                    <span className="text-[#94A3B8]">{t.percent}%</span>
+                  </div>
+                  <div className="h-2 bg-[#0F172A] rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${t.percent}%` }}
+                      transition={{ duration: 1, delay: 0.3 + i * 0.1 }}
+                      className="h-full bg-[#6366F1] rounded-full"
+                    />
+                  </div>
                 </div>
-                <div className="h-2 bg-[#0F172A] rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${t.percent}%` }}
-                    transition={{ duration: 1, delay: 0.3 + i * 0.1 }}
-                    className="h-full bg-[#6366F1] rounded-full"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
