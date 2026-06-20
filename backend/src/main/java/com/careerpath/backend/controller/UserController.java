@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.careerpath.backend.dto.UserResponse;
 import com.careerpath.backend.model.User;
 import com.careerpath.backend.repository.UserRepository;
 
@@ -34,7 +35,7 @@ public class UserController {
         user.setSelectedPath(path);
         userRepository.save(user);
 
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(toResponse(user));
     }
 
     @GetMapping("/profile")
@@ -44,6 +45,18 @@ public class UserController {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(toResponse(user));
+    }
+
+    private UserResponse toResponse(User user) {
+        return new UserResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getSelectedPath(),
+                user.getLevel(),
+                user.getXp(),
+                user.getCurrentStreak(),
+                user.getBestStreak()
+        );
     }
 }

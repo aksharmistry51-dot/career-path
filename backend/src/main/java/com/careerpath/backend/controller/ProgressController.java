@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.careerpath.backend.dto.UserResponse;
 import com.careerpath.backend.model.User;
 import com.careerpath.backend.repository.UserRepository;
 
@@ -28,7 +29,6 @@ public class ProgressController {
         int newXp = user.getXp() + xpToAdd;
         int newLevel = user.getLevel();
 
-        // Level up logic: every 300 XP = 1 level
         int xpNeededForNextLevel = newLevel * 300;
         if (newXp >= xpNeededForNextLevel) {
             newLevel++;
@@ -38,7 +38,7 @@ public class ProgressController {
         user.setLevel(newLevel);
         userRepository.save(user);
 
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(toResponse(user));
     }
 
     @PostMapping("/update-streak")
@@ -53,7 +53,7 @@ public class ProgressController {
         }
 
         userRepository.save(user);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(toResponse(user));
     }
 
     @PostMapping("/reset-streak")
@@ -61,12 +61,24 @@ public class ProgressController {
         User user = getCurrentUser(authentication);
         user.setCurrentStreak(0);
         userRepository.save(user);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(toResponse(user));
     }
 
     private User getCurrentUser(Authentication authentication) {
         String username = authentication.getName();
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    private UserResponse toResponse(User user) {
+        return new UserResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getSelectedPath(),
+                user.getLevel(),
+                user.getXp(),
+                user.getCurrentStreak(),
+                user.getBestStreak()
+        );
     }
 }
