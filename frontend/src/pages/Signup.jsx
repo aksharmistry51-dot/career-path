@@ -2,15 +2,19 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Rocket, Eye, EyeOff } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { api } from '../api'
 
 export default function Signup() {
   const [form, setForm] = useState({ username: '', password: '', confirm: '' })
   const [showPass, setShowPass] = useState(false)
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    setError('')
+
     if (!form.username || !form.password || !form.confirm) {
       setError('All fields are required.'); return
     }
@@ -20,9 +24,18 @@ export default function Signup() {
     if (form.password.length < 6) {
       setError('Password must be at least 6 characters.'); return
     }
-    // Save username to localStorage temporarily
-    localStorage.setItem('username', form.username)
-    navigate('/goal-selection')
+
+    setLoading(true)
+    try {
+      const data = await api.signup(form.username, form.password)
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('username', data.username)
+      navigate('/goal-selection')
+    } catch (err) {
+      setError(err.message || 'Signup failed. Try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -33,13 +46,11 @@ export default function Signup() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
           <Rocket className="text-[#6366F1]" size={28} />
           <span className="text-2xl font-bold text-[#F8FAFC]">Career Path</span>
         </div>
 
-        {/* Card */}
         <div className="bg-[#1E293B]/80 backdrop-blur-md border border-white/10 rounded-2xl p-8">
           <h2 className="text-2xl font-bold text-[#F8FAFC] mb-2">Create Account</h2>
           <p className="text-[#94A3B8] text-sm mb-6">Start your career journey today.</p>
@@ -94,9 +105,10 @@ export default function Signup() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
-              className="w-full bg-[#6366F1] text-white py-3 rounded-xl font-semibold hover:bg-[#5558E3] transition-colors mt-2"
+              disabled={loading}
+              className="w-full bg-[#6366F1] text-white py-3 rounded-xl font-semibold hover:bg-[#5558E3] transition-colors mt-2 disabled:opacity-50"
             >
-              Create Account
+              {loading ? 'Creating Account...' : 'Create Account'}
             </motion.button>
           </form>
 

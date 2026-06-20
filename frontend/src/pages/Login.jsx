@@ -2,21 +2,46 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Rocket, Eye, EyeOff } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { api } from '../api'
 
 export default function Login() {
   const [form, setForm] = useState({ username: '', password: '' })
   const [showPass, setShowPass] = useState(false)
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    setError('')
+
     if (!form.username || !form.password) {
       setError('All fields are required.'); return
     }
-    // Temporary: save username and go to dashboard
-    localStorage.setItem('username', form.username)
-    navigate('/dashboard')
+
+    setLoading(true)
+    try {
+      const data = await api.login(form.username, form.password)
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('username', data.username)
+
+      // Check if user has a selected path
+      try {
+        const profile = await api.getProfile()
+        if (profile.selectedPath) {
+          localStorage.setItem('selectedPath', profile.selectedPath)
+          navigate('/dashboard')
+        } else {
+          navigate('/goal-selection')
+        }
+      } catch {
+        navigate('/dashboard')
+      }
+    } catch {
+      setError('Invalid username or password.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -27,13 +52,11 @@ export default function Login() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
           <Rocket className="text-[#6366F1]" size={28} />
           <span className="text-2xl font-bold text-[#F8FAFC]">Career Path</span>
         </div>
 
-        {/* Card */}
         <div className="bg-[#1E293B]/80 backdrop-blur-md border border-white/10 rounded-2xl p-8">
           <h2 className="text-2xl font-bold text-[#F8FAFC] mb-2">Welcome Back</h2>
           <p className="text-[#94A3B8] text-sm mb-6">Continue your career journey.</p>
@@ -77,9 +100,10 @@ export default function Login() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
-              className="w-full bg-[#6366F1] text-white py-3 rounded-xl font-semibold hover:bg-[#5558E3] transition-colors mt-2"
+              disabled={loading}
+              className="w-full bg-[#6366F1] text-white py-3 rounded-xl font-semibold hover:bg-[#5558E3] transition-colors mt-2 disabled:opacity-50"
             >
-              Login
+              {loading ? 'Logging in...' : 'Login'}
             </motion.button>
           </form>
 

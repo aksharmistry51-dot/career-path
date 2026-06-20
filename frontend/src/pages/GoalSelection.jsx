@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight, Rocket } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { api } from '../api'
 
 const paths = [
   { emoji: '⭐', title: 'Full Stack Developer', duration: '6 Months', tasks: '120+ Tasks', outcomes: ['React', 'Spring Boot', 'MySQL', 'Deployment'] },
@@ -12,12 +13,21 @@ const paths = [
 
 export default function GoalSelection() {
   const [selected, setSelected] = useState(null)
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!selected) return
-    localStorage.setItem('selectedPath', selected)
-    navigate('/dashboard')
+    setLoading(true)
+    try {
+      await api.selectPath(selected)
+      localStorage.setItem('selectedPath', selected)
+      navigate('/dashboard')
+    } catch {
+      alert('Failed to save your path. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -27,7 +37,6 @@ export default function GoalSelection() {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-4xl mx-auto"
       >
-        {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-10">
           <Rocket className="text-[#6366F1]" size={28} />
           <span className="text-2xl font-bold text-[#F8FAFC]">Career Path</span>
@@ -81,14 +90,14 @@ export default function GoalSelection() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleContinue}
-            disabled={!selected}
+            disabled={!selected || loading}
             className={`flex items-center gap-2 px-8 py-3 rounded-xl font-semibold transition-all ${
               selected
                 ? 'bg-[#6366F1] text-white hover:bg-[#5558E3]'
                 : 'bg-[#1E293B] text-[#475569] cursor-not-allowed border border-white/5'
             }`}
           >
-            Continue <ArrowRight size={18} />
+            {loading ? 'Saving...' : 'Continue'} <ArrowRight size={18} />
           </motion.button>
         </div>
       </motion.div>
