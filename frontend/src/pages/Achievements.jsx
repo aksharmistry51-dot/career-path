@@ -1,19 +1,51 @@
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Sidebar from '../components/Sidebar'
+import { api } from '../api'
 
-const achievements = [
-  { emoji: '🏆', title: 'First Week', desc: 'Completed your first 7 days', unlocked: true },
-  { emoji: '⚡', title: '10 Tasks Done', desc: 'Completed 10 tasks total', unlocked: true },
-  { emoji: '🔥', title: '7 Day Streak', desc: 'Maintained a 7 day streak', unlocked: true },
-  { emoji: '🧠', title: 'DSA Warrior', desc: 'Solved 50 DSA problems', unlocked: true },
-  { emoji: '🚀', title: 'Speed Runner', desc: 'Completed a day in under 1 hour', unlocked: false },
-  { emoji: '💎', title: 'Diamond Coder', desc: 'Reached Level 10', unlocked: false },
-  { emoji: '🌟', title: 'Perfect Month', desc: 'No missed days in a month', unlocked: false },
-  { emoji: '👑', title: 'Path Master', desc: 'Completed an entire career path', unlocked: false },
+const allAchievements = [
+  { name: 'First Week', emoji: '🏆', desc: 'Completed your first 7 days' },
+  { name: '10 Tasks Done', emoji: '⚡', desc: 'Completed 10 tasks total' },
+  { name: '7 Day Streak', emoji: '🔥', desc: 'Maintained a 7 day streak' },
+  { name: 'DSA Warrior', emoji: '🧠', desc: 'Solved 50 DSA problems' },
+  { name: 'Speed Runner', emoji: '🚀', desc: 'Completed a day in under 1 hour' },
+  { name: 'Diamond Coder', emoji: '💎', desc: 'Reached Level 10' },
+  { name: 'Perfect Month', emoji: '🌟', desc: 'No missed days in a month' },
+  { name: 'Path Master', emoji: '👑', desc: 'Completed an entire career path' },
 ]
 
 export default function Achievements() {
-  const unlocked = achievements.filter(a => a.unlocked).length
+  const [unlockedNames, setUnlockedNames] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const loadAchievements = async () => {
+    try {
+      const data = await api.getAchievements()
+      setUnlockedNames(data.map(a => a.achievementName))
+    } catch (err) {
+      console.error('Failed to load achievements:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadAchievements()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0F172A] flex items-center justify-center">
+        <p className="text-[#94A3B8]">Loading achievements...</p>
+      </div>
+    )
+  }
+
+  const achievements = allAchievements.map(a => ({
+    ...a,
+    unlocked: unlockedNames.includes(a.name)
+  }))
+  const unlockedCount = achievements.filter(a => a.unlocked).length
 
   return (
     <div className="min-h-screen bg-[#0F172A] text-[#F8FAFC] flex">
@@ -21,11 +53,11 @@ export default function Achievements() {
       <main className="flex-1 ml-64 p-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-3xl font-bold mb-1">Achievements</h1>
-          <p className="text-[#94A3B8] mb-2">{unlocked} of {achievements.length} unlocked</p>
+          <p className="text-[#94A3B8] mb-2">{unlockedCount} of {achievements.length} unlocked</p>
           <div className="h-2 bg-[#1E293B] rounded-full w-64 mb-10 overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: `${(unlocked / achievements.length) * 100}%` }}
+              animate={{ width: `${(unlockedCount / achievements.length) * 100}%` }}
               transition={{ duration: 1 }}
               className="h-full bg-[#6366F1] rounded-full"
             />
@@ -49,7 +81,7 @@ export default function Achievements() {
               <div className={`text-4xl mb-3 ${!a.unlocked ? 'grayscale' : ''}`}>
                 {a.unlocked ? a.emoji : '🔒'}
               </div>
-              <h3 className="font-bold mb-1">{a.title}</h3>
+              <h3 className="font-bold mb-1">{a.name}</h3>
               <p className="text-[#94A3B8] text-xs">{a.desc}</p>
               {a.unlocked && (
                 <span className="inline-block mt-3 bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20 px-2 py-1 rounded-full text-xs">
